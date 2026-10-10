@@ -1,5 +1,7 @@
 name: relay
 on: [workflow_dispatch]
+permissions:
+  contents: write
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -8,7 +10,7 @@ jobs:
       - name: download all ltars
         run: |
           mkdir -p ltars
-          cat hashes.txt | xargs -P 64 -I{} bash -c 'for t in 1 2 3; do curl -sfL -m 120 -o ltars/{} "https://cache.mathlib.org/mathlib4-master/f/{}" && break || sleep 2; done'
+          cat hashes.txt | xargs -P 64 -I{} bash -c 'for t in 1 2 3; do curl -sfL -m 120 -o ltars/{} "https://cache.mathlib.org/mathlib4-master/f/{}" && exit 0; sleep 2; done; exit 1' || true
           echo "downloaded: $(ls ltars | wc -l) of $(wc -l < hashes.txt)"
       - name: pack
         run: |
