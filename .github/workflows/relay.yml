@@ -1,0 +1,23 @@
+name: relay
+on: [workflow_dispatch]
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: download all ltars
+        run: |
+          mkdir -p ltars
+          cat hashes.txt | xargs -P 64 -I{} bash -c 'for t in 1 2 3; do curl -sfL -m 120 -o ltars/{} "https://cache.mathlib.org/mathlib4-master/f/{}" && break || sleep 2; done'
+          echo "downloaded: $(ls ltars | wc -l) of $(wc -l < hashes.txt)"
+      - name: pack
+        run: |
+          cd ltars && tar czf ../mathlib-ltars.tar.gz . && cd ..
+          ls -la mathlib-ltars.tar.gz
+      - name: release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: cache-v4.34.1-d13f23b7
+          files: mathlib-ltars.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
